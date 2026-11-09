@@ -1,3 +1,7 @@
 # pasta com os arquivos brutos
-raw/*
+01.raw/*
+!.gitkeep
+
+# pasta com os arquivos processados
+02.processed/*
 !.gitkeep
