@@ -1,0 +1,3 @@
+# pasta com os arquivos brutos
+raw/*
+!.gitkeep
