@@ -5,3 +5,6 @@
 # pasta com os arquivos processados
 02.processed/*
 !.gitkeep
+
+# ambiente virtual para isolar as dependências Python
+.venv/
