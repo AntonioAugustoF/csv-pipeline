@@ -46,3 +46,23 @@ def get_logger():
     logger.addHandler(file_handler)
 
     return logger
+
+
+def extract(pasta_entrada):
+    """
+    Lê todos os CSVs da pasta de entrada e devolve um único DataFrame
+    com todos os dados empilhados, adicionando uma coluna
+    `arquivo_origem` com o nome do arquivo de onde cada linha veio. 
+    """
+    arquivos = os.listdir(pasta_entrada)
+    lista_dataframes = []
+
+    for f in arquivos:
+        if f.endswith(".csv"):
+            df = pd.read_csv(os.path.join(RAW, f))
+            df["arquivo_origem"] = f # preenche a coluna com o nome do arquivo
+            lista_dataframes.append(df)
+
+    df_unificado = pd.concat(lista_dataframes)
+
+    return df_unificado
