@@ -59,7 +59,7 @@ def extract(pasta_entrada):
 
     for f in arquivos:
         if f.endswith(".csv"):
-            df = pd.read_csv(os.path.join(RAW, f))
+            df = pd.read_csv(os.path.join(pasta_entrada, f))
             df["arquivo_origem"] = f # preenche a coluna com o nome do arquivo
             lista_dataframes.append(df)
 
