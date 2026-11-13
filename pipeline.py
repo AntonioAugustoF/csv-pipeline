@@ -54,15 +54,23 @@ def extract(pasta_entrada):
     com todos os dados empilhados, adicionando uma coluna
     `arquivo_origem` com o nome do arquivo de onde cada linha veio. 
     """
+    logger = get_logger()
+
     arquivos = os.listdir(pasta_entrada)
     lista_dataframes = []
 
+    logger.info(f"Iniciando extração da pasta {os.path.basename(pasta_entrada)}")
     for f in arquivos:
         if f.endswith(".csv"):
             df = pd.read_csv(os.path.join(pasta_entrada, f))
+            logger.info(f"Lendo arquivo: {f}")
             df["arquivo_origem"] = f # preenche a coluna com o nome do arquivo
             lista_dataframes.append(df)
 
+    if not lista_dataframes:
+        logger.warning(f"Nenhum arquivo .csv encontrado na pasta {os.path.basename(pasta_entrada)}.")
+
     df_unificado = pd.concat(lista_dataframes)
+    logger.info(f"Extração concluída: {len(lista_dataframes)} arquivos lidos, {len(df_unificado)} linhas no total.")
 
     return df_unificado
