@@ -2,6 +2,7 @@
 import argparse
 import logging
 import os
+from unicodedata import combining, normalize
 from datetime import date
 
 # módulos baixados
@@ -74,3 +75,45 @@ def extract(pasta_entrada):
     logger.info(f"Extração concluída: {len(lista_dataframes)} arquivos lidos, {len(df_unificado)} linhas no total.")
 
     return df_unificado
+
+
+def remover_acentos(texto):
+    nfd = normalize("NFD", texto) # separa os acentos das letras
+    return "".join(c for c in nfd if not combining(c))
+
+
+def transform(df: pd.DataFrame):
+    """
+    Recebe o DataFrame bruto e aplica os seguintes tratamentos:
+    - Remove linhas duplicadas
+    - Padroniza strings
+    - Padroniza formatos de data
+    - Converte valores em float
+    - Converte quantidades em int
+    - Remove linhas com valores nulos
+    """
+    df_limpo = df.drop_duplicates()
+
+    df_limpo["categoria"] = df_limpo["categoria"].str.strip().str.title()
+    df_limpo["cat_normalizada"] = df_limpo["categoria"].map(remover_acentos) # coluna de categorias sem acento
+
+    # solução inteligente: ao invés de dicionário fixo com versão normalizada (sem acento) e versão correta,
+    # agrupa por categoria normalizada e devolve a versão de categoria mais frequente em cada normalização,
+    # a qual geralmente é a categoria correta. Reaplicável caso as categorias mudem.
+    correcoes = (
+        df_limpo.groupby("cat_normalizada")["categoria"]
+        .agg(lambda s: s.value_counts().idxmax())
+        .to_dict()
+    )
+    df_limpo["categoria"] = df_limpo["cat_normalizada"].map(correcoes)
+    df_limpo = df_limpo.drop(columns=["cat_normalizada"])
+
+    df_limpo["data_venda"] = pd.to_datetime(df_limpo["data_venda"], errors="coerce", dayfirst=True, format="mixed")
+
+    df_limpo["valor"] = pd.to_numeric(df_limpo["valor"], errors="coerce")
+
+    df_limpo["quantidade"] = pd.to_numeric(df_limpo["quantidade"], errors="coerce").fillna(0).astype(int)
+    
+    df_limpo = df_limpo.dropna(subset=["valor"])
+
+    return df_limpo
