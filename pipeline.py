@@ -92,7 +92,12 @@ def transform(df: pd.DataFrame):
     - Converte quantidades em int
     - Remove linhas com valores nulos
     """
+    logger = get_logger()
+
+    linhas_antes = len(df)
     df_limpo = df.drop_duplicates()
+    linhas_depois = len(df_limpo)
+    logger.info(f"Removendo linhas duplicadas: {linhas_antes - linhas_depois} linhas removidas")
 
     df_limpo["categoria"] = df_limpo["categoria"].str.strip().str.title()
     df_limpo["cat_normalizada"] = df_limpo["categoria"].map(remover_acentos) # coluna de categorias sem acento
@@ -105,15 +110,26 @@ def transform(df: pd.DataFrame):
         .agg(lambda s: s.value_counts().idxmax())
         .to_dict()
     )
+
+    categoria_antes = df_limpo["categoria"].copy()
     df_limpo["categoria"] = df_limpo["cat_normalizada"].map(correcoes)
     df_limpo = df_limpo.drop(columns=["cat_normalizada"])
+    linhas_alteradas = (categoria_antes != df_limpo["categoria"]).sum()
+    logger.info(f"Categorias corrigidas: {linhas_alteradas} linhas")
 
     df_limpo["data_venda"] = pd.to_datetime(df_limpo["data_venda"], errors="coerce", dayfirst=True, format="mixed")
+    logger.info(f"Datas inválidas/vazias: {df_limpo["data_venda"].isna().sum()}")
 
     df_limpo["valor"] = pd.to_numeric(df_limpo["valor"], errors="coerce")
+    val_nulos =  df_limpo["valor"].isna().sum()
+    logger.info(f"Valores inválidos encontrados: {val_nulos}")
 
+    zeros_antes_qtd = (df_limpo["quantidade"] == 0).sum()
     df_limpo["quantidade"] = pd.to_numeric(df_limpo["quantidade"], errors="coerce").fillna(0).astype(int)
-    
+    zeros_depois_qtd = (df_limpo["quantidade"] == 0).sum()
+    logger.info(f"Quantidades inválidas preenchidas com zero: {zeros_depois_qtd - zeros_antes_qtd}")
+
     df_limpo = df_limpo.dropna(subset=["valor"])
+    logger.info(f"Linhas removidas por valor nulo: {val_nulos} linhas.")
 
     return df_limpo
