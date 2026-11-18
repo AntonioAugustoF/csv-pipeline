@@ -146,6 +146,11 @@ def load(df_limpo: pd.DataFrame, pasta_saida):
     logger.info(f"Resumo gravado em {os.path.basename(pasta_saida)}")
 
 
-df_bruto = extract(RAW)
-df_limpo = transform(df_bruto)
-load(df_limpo, PROCESSED)
+def main():
+    df_bruto = extract(RAW)
+    df_limpo = transform(df_bruto)
+    load(df_limpo, PROCESSED)
+
+
+if __name__ == "__main__":
+    main()
