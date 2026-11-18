@@ -133,3 +133,19 @@ def transform(df: pd.DataFrame):
     logger.info(f"Linhas removidas por valor nulo: {val_nulos} linhas.")
 
     return df_limpo
+
+
+def load(df_limpo: pd.DataFrame, pasta_saida):
+    logger = get_logger()
+    df_limpo.to_csv(os.path.join(pasta_saida, f"{date.today()}_vendas_filiais.csv"), index=False)
+    logger.info(f"Arquivo de vendas processado e gravado em {os.path.basename(pasta_saida)}")
+
+    with open(os.path.join(pasta_saida, f"{date.today()}_resumo.txt"), "w", encoding="utf-8") as r:
+        r.write(f"Total de linhas: {len(df_limpo)}\n")
+        r.write(f"Data da execução: {date.today()}")
+    logger.info(f"Resumo gravado em {os.path.basename(pasta_saida)}")
+
+
+df_bruto = extract(RAW)
+df_limpo = transform(df_bruto)
+load(df_limpo, PROCESSED)
