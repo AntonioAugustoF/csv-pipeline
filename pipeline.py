@@ -15,6 +15,12 @@ RAW = os.path.join(PASTA, "01.raw")
 PROCESSED = os.path.join(PASTA, "02.processed")
 LOGS = os.path.join(PASTA, "logs")
 
+MESES_PT = {
+    "jan": "01", "fev": "02", "mar": "03", "abr": "04",
+    "mai": "05", "jun": "06", "jul": "07", "ago": "08",
+    "set": "09", "out": "10", "nov": "11", "dez": "12",
+}
+
 # garantia de existência dos diretórios
 os.makedirs(RAW, exist_ok=True)
 os.makedirs(PROCESSED, exist_ok=True)
@@ -117,17 +123,19 @@ def transform(df: pd.DataFrame):
     linhas_alteradas = (categoria_antes != df_limpo["categoria"]).sum()
     logger.info(f"Categorias corrigidas: {linhas_alteradas} linhas")
 
+    # traduz meses abreviados em português (ex: "15-fev-2024" -> "15-02-2024") antes de converter
+    df_limpo["data_venda"] = df_limpo["data_venda"].replace(MESES_PT, regex=True)
     df_limpo["data_venda"] = pd.to_datetime(df_limpo["data_venda"], errors="coerce", dayfirst=True, format="mixed")
-    logger.info(f"Datas inválidas/vazias: {df_limpo["data_venda"].isna().sum()}")
+    logger.info(f"Datas inválidas/vazias: {df_limpo['data_venda'].isna().sum()}")
 
     df_limpo["valor"] = pd.to_numeric(df_limpo["valor"], errors="coerce")
-    val_nulos =  df_limpo["valor"].isna().sum()
+    val_nulos = df_limpo["valor"].isna().sum()
     logger.info(f"Valores inválidos encontrados: {val_nulos}")
 
-    zeros_antes_qtd = (df_limpo["quantidade"] == 0).sum()
-    df_limpo["quantidade"] = pd.to_numeric(df_limpo["quantidade"], errors="coerce").fillna(0).astype(int)
-    zeros_depois_qtd = (df_limpo["quantidade"] == 0).sum()
-    logger.info(f"Quantidades inválidas preenchidas com zero: {zeros_depois_qtd - zeros_antes_qtd}")
+    quantidade = pd.to_numeric(df_limpo["quantidade"], errors="coerce")
+    qtd_invalidas = quantidade.isna().sum()
+    df_limpo["quantidade"] = quantidade.fillna(0).astype(int)
+    logger.info(f"Quantidades inválidas preenchidas com zero: {qtd_invalidas}")
 
     df_limpo = df_limpo.dropna(subset=["valor"])
     logger.info(f"Linhas removidas por valor nulo: {val_nulos} linhas.")
