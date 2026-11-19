@@ -8,3 +8,11 @@
 
 # ambiente virtual para isolar as dependências Python
 .venv/
+
+# pasta de registros de logs
+logs/*
+!.gitkeep
+
+# Python cache
+__pycache__/
+*.pyc
