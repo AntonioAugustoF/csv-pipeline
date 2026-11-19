@@ -147,9 +147,18 @@ def load(df_limpo: pd.DataFrame, pasta_saida):
 
 
 def main():
-    df_bruto = extract(RAW)
+    parser = argparse.ArgumentParser(description="Pipeline ETL: lê CSVs de vendas brutos, limpa e padroniza os dados e grava o resultado.")
+    parser.add_argument("--entrada", default=RAW, help="Pasta com os CSVs brutos (padrão: 01.raw)")
+    parser.add_argument("--saida", default=PROCESSED, help="Pasta onde os arquivos processados serão gravados CSVs (padrão: 02.processed)")
+    args = parser.parse_args()
+
+    pasta_entrada = os.path.abspath(args.entrada)
+    pasta_saida = os.path.abspath(args.saida)
+    os.makedirs(pasta_saida, exist_ok=True)
+
+    df_bruto = extract(pasta_entrada)
     df_limpo = transform(df_bruto)
-    load(df_limpo, PROCESSED)
+    load(df_limpo, pasta_saida)
 
 
 if __name__ == "__main__":
